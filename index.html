@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b0e0b" />
+  <title>蛇行 · Pixel Snake</title>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">✦</div>
+        <div><div class="eyebrow">ARCADE / PIXEL FIELD</div><h1>蛇行<span>·</span></h1></div>
+      </div>
+      <div class="top-controls">
+        <div class="chip"><span>最高分</span><strong id="bestScore">00000</strong></div>
+        <button id="soundBtn" class="icon-button" aria-label="切换音效">◖</button>
+        <button id="pauseBtn" class="icon-button" aria-label="暂停">Ⅱ</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="play-card">
+        <div class="board-head"><div class="live"><i></i>LIVE RUN</div><div class="board-size">18 × 18 FIELD</div></div>
+        <div class="game-wrap">
+          <canvas id="gameCanvas" width="720" height="720" tabindex="0" aria-label="贪吃蛇游戏区"></canvas>
+          <div id="overlay" class="overlay hidden"><div class="overlay-box"><span class="overlay-kicker">RUN ENDED</span><h2 id="overlayTitle">GAME OVER</h2><p id="overlayScore">得分 00000</p><button id="restartOverlay">重新开始 ↗</button></div></div>
+        </div>
+        <div class="play-foot"><span>方向键 / WASD 移动</span><span>空格 暂停</span><span>R 重新开始</span></div>
+      </section>
+
+      <aside class="sidebar">
+        <section class="panel score-panel">
+          <div class="panel-label"><span>本局得分</span><b>SCORE</b></div>
+          <div class="big-score" id="score">00000</div>
+          <div class="score-rule"><span></span></div>
+          <div class="mini-stats"><div><span>长度</span><strong id="length">03</strong></div><div><span>速度</span><strong id="speed">01</strong></div><div><span>连击</span><strong id="combo">×0</strong></div></div>
+        </section>
+        <section class="panel food-panel">
+          <div class="panel-label"><span>当前目标</span><b>FOOD DROP</b></div>
+          <div class="food-row"><div class="food-preview" id="foodPreview"></div><div><strong id="foodName">红苹果</strong><p id="foodDesc">基础食物 · +10</p></div></div>
+          <div class="food-dots"><i class="active"></i><i></i><i></i><i></i><i></i></div>
+        </section>
+        <section class="panel power-panel">
+          <div class="panel-label"><span>道具状态</span><b>POWER UPS</b></div>
+          <div class="power-row"><div class="power-icon shield"></div><div><strong>护盾</strong><p id="shieldText">未激活</p></div><span id="shieldCount">—</span></div>
+          <div class="power-row"><div class="power-icon magnet"></div><div><strong>磁吸</strong><p>靠近食物自动吸附</p></div><span>×0</span></div>
+        </section>
+        <section class="panel controls-panel">
+          <div class="panel-label"><span>操作提示</span><b>CONTROLS</b></div>
+          <div class="key-grid"><div><b>W</b><b>↑</b><span>上</span></div><div><b>A</b><b>←</b><span>左</span></div><div><b>S</b><b>↓</b><span>下</span></div><div><b>D</b><b>→</b><span>右</span></div></div>
+          <button id="restartBtn" class="restart">重新开始 <span>↗</span></button>
+        </section>
+      </aside>
+    </main>
+    <footer><span>蛇行 / PIXEL SNAKE</span><span>素材：用户提供的像素图谱</span><span>BUILD 01 · 2026</span></footer>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
