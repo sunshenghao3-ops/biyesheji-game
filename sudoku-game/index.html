@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>数独 · Sudoku</title>
+<style>
+:root{
+  --ink:#16325c; --ink-soft:#547092; --blue:#2f6fca; --blue-deep:#245bab;
+  --sky:#e9f3ff; --sky-strong:#d8eaff; --paper:#fbfdff; --line:#d8e3ef;
+  --line-strong:#98aec5; --danger:#d85858; --success:#2f9968; --gold:#f1a338;
+  --shadow:0 20px 45px rgba(30,66,105,.12),0 3px 10px rgba(30,66,105,.08);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:"Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;color:var(--ink);background:
+ radial-gradient(circle at 16% 10%, rgba(218,237,255,.8), transparent 31%),
+ radial-gradient(circle at 87% 6%, rgba(239,247,255,.9), transparent 27%),
+ linear-gradient(180deg,#f7fbff 0%,#eef5fc 100%);}
+body{padding:34px 22px 42px;overflow-x:hidden}
+button{font:inherit;color:inherit;border:0;cursor:pointer}
+button:focus-visible,.cell:focus-visible{outline:3px solid rgba(47,111,202,.45);outline-offset:2px}
+.app-shell{max-width:1160px;margin:auto}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:20px}
+.brand{display:flex;align-items:center;gap:16px}
+.brand-mark{width:52px;height:52px;border-radius:15px;background:var(--ink);display:grid;place-items:center;color:#fff;font-weight:900;font-size:25px;letter-spacing:-4px;box-shadow:0 8px 20px rgba(22,50,92,.25);transform:rotate(-4deg)}
+.brand h1{font-size:clamp(26px,3.6vw,38px);line-height:1;margin:0;letter-spacing:.04em;font-weight:900}.brand p{margin:6px 0 0;color:var(--ink-soft);font-size:13px;letter-spacing:.16em}
+.top-actions{display:flex;gap:9px;align-items:center}.icon-btn,.ghost-btn{background:rgba(255,255,255,.82);border:1px solid var(--line);border-radius:12px;height:42px;padding:0 14px;color:var(--ink-soft);font-weight:700;transition:.2s ease}.icon-btn{width:42px;padding:0;font-size:18px}.icon-btn:hover,.ghost-btn:hover{border-color:#b6cde6;background:#fff;color:var(--blue);transform:translateY(-1px)}
+.layout{display:grid;grid-template-columns:minmax(500px,1.1fr) minmax(330px,.72fr);gap:26px;align-items:start}
+.card{background:rgba(255,255,255,.88);border:1px solid rgba(197,216,235,.9);border-radius:24px;box-shadow:var(--shadow);backdrop-filter:blur(8px)}
+.board-card{padding:28px 30px 26px;position:relative;overflow:hidden}.board-card:before{content:"";position:absolute;inset:0 0 auto;height:7px;background:linear-gradient(90deg,var(--blue),#73a6e8,var(--blue));opacity:.95}
+.card-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:20px;gap:16px}.eyebrow{font-size:11px;font-weight:900;color:var(--blue);letter-spacing:.2em;text-transform:uppercase}.card-head h2{margin:6px 0 0;font-size:25px;letter-spacing:.04em}.head-note{font-size:12px;color:var(--ink-soft);text-align:right;line-height:1.6}.head-note strong{display:block;color:var(--ink);font-size:15px}
+.board-wrap{position:relative;max-width:520px;margin:0 auto}.sudoku-board{width:100%;aspect-ratio:1;display:grid;grid-template-columns:repeat(9,1fr);grid-template-rows:repeat(9,1fr);border:3px solid var(--ink);border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 8px 0 rgba(22,50,92,.08)}
+.cell{position:relative;padding:0;background:#fff;border-right:1px solid #cad8e7;border-bottom:1px solid #cad8e7;display:grid;place-items:center;font-size:clamp(22px,4vw,34px);font-weight:650;color:var(--ink);transition:background .14s ease,color .14s ease,transform .14s ease}.cell:nth-child(9n){border-right:0}.cell:nth-child(n+73){border-bottom:0}.cell:nth-child(3n){border-right:2px solid var(--line-strong)}.cell:nth-child(9n){border-right:0}.cell:nth-child(n+19):nth-child(-n+27),.cell:nth-child(n+46):nth-child(-n+54){border-bottom:2px solid var(--line-strong)}
+.cell.given{font-weight:900;color:#152a47;background:linear-gradient(145deg,#fff,#f5f9fd)}.cell.entry{color:var(--blue)}.cell.related{background:#f0f6ff}.cell.selected{background:var(--sky-strong);box-shadow:inset 0 0 0 2px rgba(47,111,202,.32);z-index:1}.cell.same-number{background:#cfe2fb;color:var(--blue-deep)}.cell.error{color:var(--danger);background:#fff0f0;animation:shake .25s linear}.cell.correct-flash{animation:pop .38s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}@keyframes pop{50%{transform:scale(1.1);background:#e3f7ea}}
+.progress-line{display:flex;justify-content:space-between;margin:19px 2px 0;color:var(--ink-soft);font-size:12px}.progress{height:8px;background:#e8eff6;border-radius:99px;overflow:hidden;margin-top:8px}.progress span{display:block;height:100%;width:38%;background:linear-gradient(90deg,var(--blue),#6aa2e4);border-radius:99px;transition:width .3s ease}
+.side{display:grid;gap:17px}.panel{padding:22px 23px}.panel h3{font-size:17px;margin:0 0 16px;display:flex;align-items:center;justify-content:space-between}.pill{font-size:11px;border-radius:99px;background:#edf5ff;color:var(--blue);padding:6px 10px;font-weight:800}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.stat{background:#f5f9fd;border:1px solid #e0eaf3;border-radius:14px;padding:12px 10px}.stat label{display:block;color:var(--ink-soft);font-size:11px;margin-bottom:5px}.stat strong{font-variant-numeric:tabular-nums;font-size:20px;letter-spacing:.04em}
+.difficulty-list{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.difficulty{padding:11px 8px;border-radius:14px;border:1px solid var(--line);background:#fff;text-align:left;transition:.2s}.difficulty:hover{border-color:#9abce6}.difficulty.active{background:#edf5ff;border-color:#62a0e8;box-shadow:inset 0 0 0 1px #62a0e8}.difficulty b{font-size:13px;display:block}.stars{color:var(--gold);font-size:12px;letter-spacing:1px;margin:3px 0}.difficulty small{color:var(--ink-soft);font-size:10px}
+.number-pad{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}.num{height:47px;border:1px solid #c9d8e8;border-radius:12px;background:#fff;color:var(--blue);font-weight:800;font-size:18px;transition:.16s}.num:hover{background:#eef6ff;border-color:#76a9e2;transform:translateY(-2px)}.num.erase{color:var(--ink-soft);font-size:16px}.hint-btn{width:100%;margin-top:11px;height:45px;border-radius:12px;background:var(--ink);color:#fff;font-weight:800;letter-spacing:.04em;box-shadow:0 7px 14px rgba(22,50,92,.18);transition:.2s}.hint-btn:hover{background:var(--blue-deep);transform:translateY(-1px)}.hint-btn:disabled{opacity:.46;cursor:not-allowed;transform:none}
+.action-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.action{height:46px;border-radius:12px;border:1px solid var(--line);background:#fff;font-weight:800;color:var(--ink-soft);transition:.2s}.action:hover{border-color:#8bb0d8;color:var(--blue);background:#f7fbff}.action.primary{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 7px 14px rgba(47,111,202,.2)}.action.primary:hover{background:var(--blue-deep)}
+.tip{display:flex;gap:11px;align-items:flex-start;color:var(--ink-soft);font-size:12px;line-height:1.65}.tip-icon{flex:0 0 29px;height:29px;border-radius:9px;background:#fff3cf;color:#bc7d0f;display:grid;place-items:center;font-weight:900}.tip strong{display:block;color:var(--ink);font-size:13px;margin-bottom:1px}
+.footer-note{text-align:center;color:#7790aa;font-size:11px;margin-top:24px;letter-spacing:.08em}.modal-backdrop{position:fixed;inset:0;background:rgba(13,35,63,.34);display:grid;place-items:center;padding:22px;z-index:5;opacity:0;pointer-events:none;transition:.2s}.modal-backdrop.open{opacity:1;pointer-events:auto}.modal{max-width:400px;width:100%;padding:30px;border-radius:22px;background:#fff;box-shadow:0 24px 70px rgba(13,35,63,.25);text-align:center;transform:translateY(12px);transition:.2s}.modal-backdrop.open .modal{transform:translateY(0)}.modal .big{font-size:42px;margin-bottom:6px}.modal h2{margin:0;font-size:25px}.modal p{color:var(--ink-soft);font-size:13px;line-height:1.7}.modal .action{width:100%;margin-top:8px}
+@media(max-width:900px){body{padding:22px 14px 32px}.layout{grid-template-columns:1fr;max-width:620px;margin:auto}.side{grid-template-columns:1fr 1fr}.side .panel:last-child{grid-column:1/-1}.topbar{margin-bottom:18px}.board-card{padding:23px 18px}.board-wrap{max-width:560px}}
+@media(max-width:560px){.topbar{align-items:flex-start}.brand-mark{width:44px;height:44px;font-size:21px}.brand p{font-size:10px}.top-actions .ghost-btn{display:none}.layout{gap:15px}.side{display:grid;grid-template-columns:1fr}.side .panel:last-child{grid-column:auto}.panel{padding:18px}.board-card{padding:19px 12px 20px}.card-head{margin-bottom:14px}.card-head h2{font-size:20px}.head-note{font-size:10px}.cell{font-size:clamp(18px,7vw,28px);border-radius:0}.number-pad{gap:7px}.num{height:43px}.footer-note{line-height:1.6}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+
+[hidden]{display:none!important}.pencil-asset{width:44px;height:64px;object-fit:contain;mix-blend-mode:multiply}.notes{display:grid;grid-template-columns:repeat(3,1fr);width:85%;height:85%;font-size:11px;font-weight:500;color:var(--ink-soft)}.notes span{display:grid;place-items:center}.tools{margin-bottom:18px}.pause-cover{position:absolute;inset:0;z-index:3;background:#edf5ff;display:flex;align-items:center;justify-content:center;flex-direction:column;border:3px solid var(--ink);border-radius:14px;text-align:center;padding:18px}.pause-cover strong{font-size:26px}.pause-cover p{color:var(--ink-soft)}.pause-cover button{padding:0 32px}.paused .sudoku-board{visibility:hidden}dialog{border:1px solid var(--line);border-radius:20px;max-width:520px;width:calc(100% - 32px);padding:28px;color:var(--ink);line-height:1.8}dialog::backdrop{background:#16325c70}dialog button{width:100%;margin-top:20px}button:disabled{opacity:.45;cursor:not-allowed}.cell:nth-child(3n){border-right-color:#16325c}.cell:nth-child(n+19):nth-child(-n+27),.cell:nth-child(n+46):nth-child(-n+54){border-bottom-color:#16325c}@media(min-width:901px){.panel{padding:16px 20px}.side{gap:12px}.board-card{padding-top:24px}.card{border-radius:18px}.board-card{border-radius:22px}}
+@media(max-width:420px){.brand{gap:7px}.brand h1{font-size:22px;white-space:nowrap}.brand p{letter-spacing:0;font-size:9px}.pencil-asset{width:26px;height:45px}.topbar{gap:8px}.top-actions{gap:5px}.icon-btn{width:32px;height:34px}.notes{font-size:9px}}
+</style>
+</head>
+<body>
+<main class="app-shell">
+  <header class="topbar">
+    <div class="brand"><img class="pencil-asset" src="assets/pencil.png" alt="蓝色铅笔"><div><h1>数独 <span style="font-weight:500;color:var(--blue)">SUDOKU</span></h1><p>经典逻辑数字游戏 · 专注每一步</p></div></div>
+    <div class="top-actions"><button class="ghost-btn" id="newPuzzleTop">换一局</button><button class="icon-btn" id="soundToggle" aria-label="切换音效">◖</button><button class="icon-btn" id="helpBtn" aria-label="查看玩法">?</button></div>
+  </header>
+  <section class="layout">
+    <article class="card board-card">
+      <div class="card-head"><div><div class="eyebrow">经典九宫格 / 9 × 9</div><h2>来一局数独</h2></div><div class="head-note"><strong id="statusText">进行中</strong><span id="selectedHint">选择一个格子开始</span></div></div>
+      <div class="board-wrap"><div class="pause-cover" id="pauseCover" hidden><strong>休息一下</strong><p>计时已暂停，准备好再继续。</p><button id="resumeBtn" class="action primary">继续游戏</button></div><div class="sudoku-board" id="board" role="grid" aria-label="数独棋盘"></div></div>
+      <div class="progress-line"><span>完成进度</span><span id="progressText">30 / 81</span></div><div class="progress"><span id="progressBar"></span></div>
+    </article>
+    <aside class="side">
+      <section class="card panel"><h3>本局记录 <span class="pill" id="difficultyPill">中等</span></h3><div class="stats"><div class="stat"><label>用时</label><strong id="timer">00:00</strong></div><div class="stat"><label>错误</label><strong id="mistakes">0</strong></div><div class="stat"><label>提示</label><strong id="hintsLeft">3</strong></div></div></section>
+      <section class="card panel"><h3>选择难度</h3><div class="difficulty-list"><button class="difficulty" data-diff="easy"><b>简单</b><div class="stars">★</div><small>入门练习</small></button><button class="difficulty active" data-diff="medium"><b>中等</b><div class="stars">★★</div><small>刚刚好</small></button><button class="difficulty" data-diff="hard"><b>困难</b><div class="stars">★★★</div><small>挑战自己</small></button></div></section>
+      <section class="card panel"><div class="action-row tools"><button class="action" id="notesBtn">✎ 笔记：关</button><button class="action" id="undoBtn">↶ 撤销</button></div><h3>输入数字 <span class="pill">键盘 1–9</span></h3><div class="number-pad" id="numberPad"></div><button class="hint-btn" id="hintBtn">✦ 使用提示（剩余 3 次）</button></section>
+      <section class="card panel"><div class="action-row"><button class="action" id="pauseBtn">Ⅱ 暂停</button><button class="action primary" id="newPuzzle">↻ 新的一局</button></div></section>
+      <section class="card panel"><div class="tip"><div class="tip-icon">i</div><div><strong>小提示</strong>每一行、每一列和每个 3×3 宫格都要填入 1–9，且数字不能重复。点击已填数字，可快速查看它在棋盘上的位置。</div></div></section>
+    </aside>
+  </section>
+  <div class="footer-note">方向键移动 · N 切换笔记 · Ctrl + Z 撤销 · P 暂停</div>
+</main>
+<div class="modal-backdrop" id="modalBackdrop" hidden role="dialog" aria-modal="true" aria-label="游戏完成"><div class="modal"><div class="big">✦</div><h2>完成得漂亮！</h2><p id="completeCopy">你用 00:00 完成了这局数独。</p><button class="action primary" id="modalNew">再来一局</button></div></div>
+<dialog id="helpDialog"><h2>数独玩法</h2><p>每一行、每一列和每个 3 × 3 宫格中，1–9 都只能出现一次。</p><p>点击格子后输入数字。笔记模式用于记录候选数字；填错的数字会标红，可以擦除或撤销。每局有 3 次提示。</p><p>方向键移动 · N 笔记 · P 暂停 · Ctrl + Z 撤销</p><details><summary>查看原始参考素材</summary><img src="assets/sudoku-reference.png" alt="数独玩法和美术素材参考图" style="width:100%;margin-top:12px"></details><button class="action primary" id="closeHelp">开始推理</button></dialog><script src="engine.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
+
