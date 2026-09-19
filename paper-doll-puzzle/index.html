@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>残纸归位 · 纸人拼合</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="game-shell" aria-label="纸人拼合解谜小游戏">
+    <header class="topbar">
+      <div class="brand-mark"><span class="brand-dot"></span><span>残纸归位</span></div>
+      <div class="case-tag">保险柜谜题 · 01</div>
+      <button id="exitBtn" class="ghost-btn" type="button">退出谜题 <span>ESC</span></button>
+    </header>
+
+    <section class="game-frame">
+      <aside class="clue-panel panel">
+        <div class="panel-kicker">线索 / CLUE</div>
+        <h1>纸人缺一身，<br><em>路才会出现。</em></h1>
+        <div class="clue-note">
+          <span class="note-pin"></span>
+          <p>“头要对着缝，<br/>衣要遮住印。<br/>右手，指向归处。”</p>
+        </div>
+        <div class="rule-list">
+          <div><b>01</b><span>红色缝线要连成一条线</span></div>
+          <div><b>02</b><span>同样数量的针孔相互对应</span></div>
+          <div><b>03</b><span>最后放上胸口的封纸</span></div>
+        </div>
+        <button id="hintBtn" class="hint-btn" type="button"><span class="hint-icon">?</span>查看提示 <small>剩余 2 次</small></button>
+      </aside>
+
+      <section class="workspace panel" aria-label="拼合工作区">
+        <div class="workspace-head"><span>拼合台</span><span id="progressText">0 / 7 已归位</span></div>
+        <div id="playfield" class="playfield">
+          <div class="doll-board" id="dollBoard" aria-label="纸人轮廓">
+            <div class="board-label">纸人轮廓</div>
+            <div class="target-slot slot-head" data-slot="head"></div>
+            <div class="target-slot slot-torso" data-slot="torso"></div>
+            <div class="target-slot slot-seal" data-slot="seal"></div>
+            <div class="target-slot slot-arm-left" data-slot="arm-left"></div>
+            <div class="target-slot slot-arm-right" data-slot="arm-right"></div>
+            <div class="target-slot slot-leg-left" data-slot="leg-left"></div>
+            <div class="target-slot slot-leg-right" data-slot="leg-right"></div>
+            <div class="board-stitch stitch-a"></div><div class="board-stitch stitch-b"></div><div class="board-stitch stitch-c"></div>
+          </div>
+          <div id="successHand" class="success-hand" aria-hidden="true"></div>
+          <div id="creepyFace" class="creepy-face" aria-hidden="true"></div>
+          <div id="toast" class="toast" role="status"></div>
+        </div>
+      </section>
+
+      <aside class="parts-panel panel">
+        <div class="parts-head"><div><div class="panel-kicker">部件 / PIECES</div><h2>散落的纸身</h2></div><span class="parts-count">7</span></div>
+        <div id="tray" class="tray" aria-label="可拖拽纸人部件"></div>
+        <div class="parts-foot"><span class="tiny-line"></span><span>拖到轮廓上 · 点击可旋转</span></div>
+      </aside>
+    </section>
+
+    <footer class="bottombar">
+      <div class="status-line"><span id="statusDot" class="status-dot"></span><span id="statusText">等待纸身归位</span></div>
+      <div class="actions"><button id="resetBtn" class="text-btn" type="button">重新打乱</button><button id="checkBtn" class="primary-btn" type="button">验合 <span>↵</span></button></div>
+    </footer>
+    <div id="veil" class="veil" aria-hidden="true"><div class="success-modal"><div class="success-seal">◌</div><div class="modal-kicker">纸身已合</div><h2>它指向了右边。</h2><p>保险柜里的锁舌传来了一声轻响。</p><button id="continueBtn" class="primary-btn">返回场景 <span>→</span></button></div></div>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
+
+
+
+
