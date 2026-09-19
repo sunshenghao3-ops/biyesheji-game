@@ -60,6 +60,7 @@
     .score-row { display: flex; gap: 10px; }
     .score-box { min-width: 88px; padding: 10px 13px; border-radius: 13px; color: #fff; background: var(--ink); text-align: center; }
     .score-box.alt { color: var(--ink); background: var(--blue-soft); }
+    .score-box.target { color: var(--ink); background: #eef5ef; }
     .score-label { display: block; opacity: .72; font-size: 10px; letter-spacing: .1em; }
     .score-value { display: block; margin-top: 2px; font-size: 22px; font-weight: 800; line-height: 1.15; }
     .board-wrap { position: relative; width: 100%; max-width: 630px; margin: 0 auto; }
@@ -132,6 +133,7 @@
           <div class="score-row" aria-live="polite">
             <div class="score-box"><span class="score-label">当前分数</span><span class="score-value" id="score">0</span></div>
             <div class="score-box alt"><span class="score-label">最高分</span><span class="score-value" id="best">0</span></div>
+            <div class="score-box target"><span class="score-label">通关目标</span><span class="score-value">1024</span></div>
           </div>
         </div>
         <div class="board-wrap">
@@ -159,6 +161,7 @@
   <script>
     (() => {
       const SIZE = 4;
+      const TARGET_SCORE = 1024;
       const boardEl = document.getElementById('board');
       const scoreEl = document.getElementById('score');
       const bestEl = document.getElementById('best');
@@ -180,9 +183,9 @@
       function render() { boardEl.innerHTML = ''; board.forEach((row, r) => row.forEach((value, c) => { const cell = document.createElement('div'); cell.className = 'cell'; cell.setAttribute('role', 'gridcell'); if (value) { cell.className += ' tile'; cell.dataset.value = value; cell.textContent = value; cell.setAttribute('aria-label', `${value}，第 ${r + 1} 行第 ${c + 1} 列`); } boardEl.appendChild(cell); })); scoreEl.textContent = score.toLocaleString('zh-CN'); bestEl.textContent = best.toLocaleString('zh-CN'); }
       function setHint(text) { hintTextEl.textContent = text; }
       function hideOverlay() { overlay.hidden = true; }
-      function showOverlay(kind) { overlay.hidden = false; if (kind === 'win') { overlayKicker.textContent = '恭喜你'; overlayTitle.textContent = '你合成了 2048'; overlayText.textContent = '漂亮的一步！还可以继续挑战更高分。'; continueBtn.hidden = false; } else { overlayKicker.textContent = '本局结束'; overlayTitle.textContent = '再试一次'; overlayText.textContent = '棋盘已经没有可以合并的数字了。'; continueBtn.hidden = true; } }
+      function showOverlay(kind) { overlay.hidden = false; if (kind === 'win') { overlayKicker.textContent = '恭喜你'; overlayTitle.textContent = `达到 ${TARGET_SCORE} 分`; overlayText.textContent = '本局通关！还可以继续挑战更高分。'; continueBtn.hidden = false; } else { overlayKicker.textContent = '本局结束'; overlayTitle.textContent = '再试一次'; overlayText.textContent = '棋盘已经没有可以合并的数字了。'; continueBtn.hidden = true; } }
       function slideLine(line) { const values = line.filter(Boolean); const result = []; let gained = 0; for (let i = 0; i < values.length; i++) { if (values[i] === values[i + 1]) { const merged = values[i] * 2; result.push(merged); gained += merged; i++; } else result.push(values[i]); } while (result.length < SIZE) result.push(0); return { line: result, gained }; }
-      function move(direction) { const before = snapshot(); let changed = false; let gained = 0; const next = emptyBoard(); for (let i = 0; i < SIZE; i++) { const line = []; for (let j = 0; j < SIZE; j++) line.push(direction === 'left' ? board[i][j] : direction === 'right' ? board[i][SIZE - 1 - j] : direction === 'up' ? board[j][i] : board[SIZE - 1 - j][i]); const moved = slideLine(line); gained += moved.gained; for (let j = 0; j < SIZE; j++) { const r = direction === 'left' || direction === 'right' ? i : direction === 'up' ? j : SIZE - 1 - j; const c = direction === 'left' ? j : direction === 'right' ? SIZE - 1 - j : i; next[r][c] = moved.line[j]; } } changed = next.some((row, r) => row.some((v, c) => v !== board[r][c])); if (!changed) { setHint('这里不能移动，试试另一个方向'); return false; } history.push(before); board = next; score += gained; if (score > best) { best = score; localStorage.setItem('2048-best', String(best)); } addTile(); render(); if (!won && board.some(row => row.includes(2048))) { won = true; setHint('2048 已达成！可以继续挑战'); showOverlay('win'); } else if (!canMove()) { setHint('没有可移动的方块了'); showOverlay('over'); } else if (gained) setHint(`合并成功，获得 ${gained} 分`); else setHint('继续寻找下一次合并'); return true; }
+      function move(direction) { const before = snapshot(); let changed = false; let gained = 0; const next = emptyBoard(); for (let i = 0; i < SIZE; i++) { const line = []; for (let j = 0; j < SIZE; j++) line.push(direction === 'left' ? board[i][j] : direction === 'right' ? board[i][SIZE - 1 - j] : direction === 'up' ? board[j][i] : board[SIZE - 1 - j][i]); const moved = slideLine(line); gained += moved.gained; for (let j = 0; j < SIZE; j++) { const r = direction === 'left' || direction === 'right' ? i : direction === 'up' ? j : SIZE - 1 - j; const c = direction === 'left' ? j : direction === 'right' ? SIZE - 1 - j : i; next[r][c] = moved.line[j]; } } changed = next.some((row, r) => row.some((v, c) => v !== board[r][c])); if (!changed) { setHint('这里不能移动，试试另一个方向'); return false; } history.push(before); board = next; score += gained; if (score > best) { best = score; localStorage.setItem('2048-best', String(best)); } addTile(); render(); if (!won && score >= TARGET_SCORE) { won = true; setHint(`达到 ${TARGET_SCORE} 分，通关成功！`); showOverlay('win'); } else if (!canMove()) { setHint('没有可移动的方块了'); showOverlay('over'); } else if (gained) setHint(`合并成功，获得 ${gained} 分`); else setHint('继续寻找下一次合并'); return true; }
       function canMove() { if (emptyCells().length) return true; for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) if ((r < SIZE - 1 && board[r][c] === board[r + 1][c]) || (c < SIZE - 1 && board[r][c] === board[r][c + 1])) return true; return false; }
       function undo() { if (!history.length) { setHint('还没有可以撤销的步骤'); return; } restore(history.pop()); setHint('已撤销上一步'); }
       function directionFromKey(key) { return ({ ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down', a: 'left', d: 'right', w: 'up', s: 'down' })[key]; }
