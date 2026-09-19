@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f7f8fb" />
+  <title>2048 · 数字合成</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;800;900&display=swap');
+
+    :root {
+      --ink: #17345f;
+      --ink-strong: #112a4c;
+      --blue: #2b65b8;
+      --blue-soft: #eaf2ff;
+      --paper: #f7f8fb;
+      --card: #ffffff;
+      --line: #dfe4ea;
+      --muted: #718096;
+      --board: #d7dee8;
+      --cell: #edf1f5;
+      --shadow: 0 18px 50px rgba(23, 52, 95, .08), 0 2px 8px rgba(23, 52, 95, .05);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    html { min-height: 100%; background: var(--paper); }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink-strong);
+      font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+      background:
+        radial-gradient(circle at 5% 0%, rgba(43, 101, 184, .08), transparent 30%),
+        radial-gradient(circle at 100% 100%, rgba(226, 235, 248, .65), transparent 30%),
+        var(--paper);
+    }
+
+    button { font: inherit; }
+    .app-shell { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 38px 0 32px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 34px; }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand-mark { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 14px; color: white; background: var(--ink); box-shadow: 0 8px 18px rgba(23, 52, 95, .18); font-size: 21px; font-weight: 900; letter-spacing: -2px; }
+    .brand h1 { margin: 0; color: var(--ink); font-size: clamp(25px, 3vw, 34px); line-height: 1; letter-spacing: -.06em; }
+    .brand p { margin: 7px 0 0; color: var(--muted); font-size: 13px; letter-spacing: .08em; }
+    .top-actions { display: flex; gap: 10px; }
+    .ghost-btn, .primary-btn { min-height: 44px; border: 1px solid var(--line); border-radius: 12px; padding: 0 16px; cursor: pointer; transition: transform .16s ease, box-shadow .16s ease, background .16s ease; }
+    .ghost-btn { color: var(--ink); background: rgba(255,255,255,.72); }
+    .ghost-btn:hover, .primary-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(23,52,95,.12); }
+    .ghost-btn:active, .primary-btn:active { transform: translateY(0); }
+    .primary-btn { color: #fff; border-color: var(--blue); background: var(--blue); font-weight: 700; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(300px, .75fr); gap: 24px; align-items: start; }
+    .game-card, .side-card { border: 1px solid rgba(223,228,234,.9); border-radius: var(--radius-xl); background: rgba(255,255,255,.92); box-shadow: var(--shadow); }
+    .game-card { padding: clamp(18px, 3vw, 32px); }
+    .game-card-head { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
+    .eyebrow { margin: 0 0 8px; color: var(--blue); font-size: 12px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+    .game-card h2 { margin: 0; color: var(--ink); font-size: clamp(24px, 4vw, 38px); line-height: 1.08; letter-spacing: -.06em; }
+    .score-row { display: flex; gap: 10px; }
+    .score-box { min-width: 88px; padding: 10px 13px; border-radius: 13px; color: #fff; background: var(--ink); text-align: center; }
+    .score-box.alt { color: var(--ink); background: var(--blue-soft); }
+    .score-label { display: block; opacity: .72; font-size: 10px; letter-spacing: .1em; }
+    .score-value { display: block; margin-top: 2px; font-size: 22px; font-weight: 800; line-height: 1.15; }
+    .board-wrap { position: relative; width: 100%; max-width: 630px; margin: 0 auto; }
+    .board { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(7px, 1vw, 10px); padding: clamp(9px, 1.5vw, 13px); aspect-ratio: 1; border-radius: 22px; background: var(--board); box-shadow: inset 0 1px 0 rgba(255,255,255,.65), inset 0 -2px 0 rgba(23,52,95,.08); touch-action: none; user-select: none; }
+    .cell { display: grid; place-items: center; min-width: 0; border-radius: 14px; background: var(--cell); color: transparent; font-size: clamp(24px, 6vw, 54px); font-weight: 900; line-height: 1; letter-spacing: -.06em; }
+    .tile { position: relative; overflow: hidden; color: var(--tile-fg, var(--ink-strong)); background: var(--tile-bg, #fff); box-shadow: inset 0 -3px 0 rgba(23,52,95,.08); animation: tile-in .18s cubic-bezier(.2,.8,.25,1); }
+    .tile::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,.35), transparent 40%); pointer-events: none; }
+    .tile.merge { animation: tile-merge .27s ease; }
+    .tile[data-value="2"], .tile[data-value="4"] { --tile-bg: #fff; --tile-fg: var(--ink); }
+    .tile[data-value="8"] { --tile-bg: #dfeeff; --tile-fg: #205aab; }
+    .tile[data-value="16"] { --tile-bg: #c8e0ff; --tile-fg: #1d549b; }
+    .tile[data-value="32"] { --tile-bg: #a7cbf7; --tile-fg: #173e79; }
+    .tile[data-value="64"] { --tile-bg: #2b65b8; --tile-fg: #fff; }
+    .tile[data-value="128"] { --tile-bg: #214f93; --tile-fg: #fff; font-size: clamp(20px, 5.1vw, 44px); }
+    .tile[data-value="256"] { --tile-bg: #17345f; --tile-fg: #fff; font-size: clamp(20px, 5.1vw, 44px); }
+    .tile[data-value="512"], .tile[data-value="1024"], .tile[data-value="2048"] { --tile-bg: #0f2544; --tile-fg: #fff; font-size: clamp(18px, 4.5vw, 38px); }
+    .tile[data-value="2048"] { box-shadow: inset 0 0 0 3px #88b9ff, 0 6px 16px rgba(43,101,184,.26); }
+    .hint-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 18px; color: var(--muted); font-size: 13px; }
+    .hint-row kbd { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 5px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; color: var(--ink); background: #fff; font-size: 11px; font-weight: 800; }
+    .hint-text { display: flex; align-items: center; gap: 7px; }
+    .hint-dot { width: 7px; height: 7px; border-radius: 50%; background: #5e96dd; }
+    .side-stack { display: grid; gap: 16px; }
+    .side-card { padding: 22px; }
+    .side-card h3 { margin: 0 0 16px; color: var(--ink); font-size: 17px; letter-spacing: -.03em; }
+    .side-card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.75; }
+    .steps { display: grid; gap: 13px; }
+    .step { display: flex; align-items: center; gap: 12px; }
+    .step-index { display: grid; place-items: center; width: 30px; height: 30px; flex: 0 0 30px; border-radius: 9px; color: var(--blue); background: var(--blue-soft); font-size: 12px; font-weight: 900; }
+    .step strong { display: block; color: var(--ink); font-size: 13px; }
+    .step span { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; }
+    .side-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+    .side-actions button { min-height: 42px; }
+    .tip { position: relative; overflow: hidden; border-color: rgba(43,101,184,.12); background: linear-gradient(145deg, #eef5ff, #fff); }
+    .tip::after { content: '2048'; position: absolute; right: -7px; bottom: -24px; color: rgba(43,101,184,.08); font-size: 74px; font-weight: 900; letter-spacing: -.1em; }
+    .tip p { position: relative; z-index: 1; max-width: 310px; color: #42648d; }
+    .footer { display: flex; justify-content: space-between; gap: 16px; margin-top: 28px; color: #8794a5; font-size: 12px; }
+    .footer span:last-child { text-align: right; }
+    .overlay { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 22px; background: rgba(247,248,251,.84); backdrop-filter: blur(5px); animation: fade-in .2s ease; }
+    .overlay[hidden] { display: none; }
+    .overlay-panel { width: min(86%, 330px); padding: 28px 24px; border: 1px solid var(--line); border-radius: 20px; background: rgba(255,255,255,.97); box-shadow: 0 14px 40px rgba(23,52,95,.15); text-align: center; }
+    .overlay-kicker { color: var(--blue); font-size: 12px; font-weight: 800; letter-spacing: .12em; }
+    .overlay h3 { margin: 7px 0 9px; color: var(--ink); font-size: 27px; letter-spacing: -.06em; }
+    .overlay p { margin: 0 0 18px; color: var(--muted); font-size: 13px; }
+    .overlay-actions { display: flex; justify-content: center; gap: 9px; }
+    @keyframes tile-in { from { transform: scale(.7); opacity: .2; } to { transform: scale(1); opacity: 1; } }
+    @keyframes tile-merge { 0%,100% { transform: scale(1); } 48% { transform: scale(1.1); } }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    @media (max-width: 840px) { .layout { grid-template-columns: 1fr; } .side-stack { grid-template-columns: 1fr 1fr; } .tip { grid-column: 1 / -1; } .board-wrap { max-width: 680px; } }
+    @media (max-width: 600px) { .app-shell { width: min(100% - 24px, 520px); padding-top: 22px; } .topbar { align-items: flex-start; margin-bottom: 22px; } .top-actions .ghost-btn:first-child { display: none; } .top-actions { flex: 0 0 auto; } .brand-mark { width: 42px; height: 42px; border-radius: 12px; } .brand h1 { font-size: 27px; } .game-card-head { display: block; } .score-row { margin-top: 17px; } .score-box { flex: 1; } .side-stack { grid-template-columns: 1fr; } .side-card { padding: 19px; } .tip { grid-column: auto; } .footer { display: block; line-height: 1.8; } .footer span:last-child { margin-top: 4px; text-align: left; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">2⁰⁴⁸</div>
+        <div><h1>2048</h1><p>经典数字合成游戏</p></div>
+      </div>
+      <div class="top-actions">
+        <button class="ghost-btn" id="undoTop" type="button">↶ 撤销</button>
+        <button class="primary-btn" id="newTop" type="button">新游戏</button>
+      </div>
+    </header>
+
+    <section class="layout" aria-label="2048 游戏区域">
+      <section class="game-card">
+        <div class="game-card-head">
+          <div><p class="eyebrow">数字合成 · 01</p><h2>把相同数字合在一起</h2></div>
+          <div class="score-row" aria-live="polite">
+            <div class="score-box"><span class="score-label">当前分数</span><span class="score-value" id="score">0</span></div>
+            <div class="score-box alt"><span class="score-label">最高分</span><span class="score-value" id="best">0</span></div>
+          </div>
+        </div>
+        <div class="board-wrap">
+          <div class="board" id="board" role="grid" aria-label="2048 棋盘"></div>
+          <div class="overlay" id="overlay" hidden>
+            <div class="overlay-panel">
+              <div class="overlay-kicker" id="overlayKicker">本局结束</div>
+              <h3 id="overlayTitle">再试一次</h3>
+              <p id="overlayText">棋盘已经没有可以合并的数字了。</p>
+              <div class="overlay-actions"><button class="ghost-btn" id="continueBtn" type="button" hidden>继续游戏</button><button class="primary-btn" id="restartBtn" type="button">重新开始</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="hint-row"><div class="hint-text"><span class="hint-dot"></span><span id="hintText">准备好了吗？向任意方向滑动或按方向键</span></div><div><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd></div></div>
+      </section>
+
+      <aside class="side-stack">
+        <section class="side-card"><h3>怎么玩</h3><div class="steps"><div class="step"><div class="step-index">01</div><div><strong>移动数字</strong><span>使用方向键或滑动棋盘</span></div></div><div class="step"><div class="step-index">02</div><div><strong>合并方块</strong><span>相同数字碰撞后会相加</span></div></div><div class="step"><div class="step-index">03</div><div><strong>挑战 2048</strong><span>留出空间，走得更远</span></div></div></div><div class="side-actions"><button class="ghost-btn" id="undoSide" type="button">↶ 撤销一步</button><button class="primary-btn" id="newSide" type="button">新游戏</button></div></section>
+        <section class="side-card tip"><h3>小提示</h3><p>把大数字固定在一个角落，围绕它整理其他数字，会更容易保留移动空间。</p></section>
+      </aside>
+    </section>
+    <footer class="footer"><span>每一步都可能改变棋盘，慢一点，想清楚再移动。</span><span>本地保存最高分 · 支持触摸操作</span></footer>
+  </main>
+
+  <script>
+    (() => {
+      const SIZE = 4;
+      const boardEl = document.getElementById('board');
+      const scoreEl = document.getElementById('score');
+      const bestEl = document.getElementById('best');
+      const hintTextEl = document.getElementById('hintText');
+      const overlay = document.getElementById('overlay');
+      const overlayKicker = document.getElementById('overlayKicker');
+      const overlayTitle = document.getElementById('overlayTitle');
+      const overlayText = document.getElementById('overlayText');
+      const continueBtn = document.getElementById('continueBtn');
+      let board = []; let score = 0; let best = Number(localStorage.getItem('2048-best') || 0); let history = []; let won = false; let keepPlaying = false; let startPoint = null;
+
+      const emptyBoard = () => Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+      const clone = (value) => value.map(row => row.slice());
+      const emptyCells = () => { const cells = []; board.forEach((row, r) => row.forEach((v, c) => { if (!v) cells.push([r, c]); })); return cells; };
+      const addTile = () => { const cells = emptyCells(); if (!cells.length) return; const [r, c] = cells[Math.floor(Math.random() * cells.length)]; board[r][c] = Math.random() < .9 ? 2 : 4; };
+      const snapshot = () => ({ board: clone(board), score });
+      const restore = (state) => { board = clone(state.board); score = state.score; hideOverlay(); render(); };
+      function newGame() { board = emptyBoard(); score = 0; history = []; won = false; keepPlaying = false; addTile(); addTile(); hideOverlay(); render(); setHint('准备好了吗？向任意方向滑动或按方向键'); }
+      function render() { boardEl.innerHTML = ''; board.forEach((row, r) => row.forEach((value, c) => { const cell = document.createElement('div'); cell.className = 'cell'; cell.setAttribute('role', 'gridcell'); if (value) { cell.className += ' tile'; cell.dataset.value = value; cell.textContent = value; cell.setAttribute('aria-label', `${value}，第 ${r + 1} 行第 ${c + 1} 列`); } boardEl.appendChild(cell); })); scoreEl.textContent = score.toLocaleString('zh-CN'); bestEl.textContent = best.toLocaleString('zh-CN'); }
+      function setHint(text) { hintTextEl.textContent = text; }
+      function hideOverlay() { overlay.hidden = true; }
+      function showOverlay(kind) { overlay.hidden = false; if (kind === 'win') { overlayKicker.textContent = '恭喜你'; overlayTitle.textContent = '你合成了 2048'; overlayText.textContent = '漂亮的一步！还可以继续挑战更高分。'; continueBtn.hidden = false; } else { overlayKicker.textContent = '本局结束'; overlayTitle.textContent = '再试一次'; overlayText.textContent = '棋盘已经没有可以合并的数字了。'; continueBtn.hidden = true; } }
+      function slideLine(line) { const values = line.filter(Boolean); const result = []; let gained = 0; for (let i = 0; i < values.length; i++) { if (values[i] === values[i + 1]) { const merged = values[i] * 2; result.push(merged); gained += merged; i++; } else result.push(values[i]); } while (result.length < SIZE) result.push(0); return { line: result, gained }; }
+      function move(direction) { const before = snapshot(); let changed = false; let gained = 0; const next = emptyBoard(); for (let i = 0; i < SIZE; i++) { const line = []; for (let j = 0; j < SIZE; j++) line.push(direction === 'left' ? board[i][j] : direction === 'right' ? board[i][SIZE - 1 - j] : direction === 'up' ? board[j][i] : board[SIZE - 1 - j][i]); const moved = slideLine(line); gained += moved.gained; for (let j = 0; j < SIZE; j++) { const r = direction === 'left' || direction === 'right' ? i : direction === 'up' ? j : SIZE - 1 - j; const c = direction === 'left' ? j : direction === 'right' ? SIZE - 1 - j : i; next[r][c] = moved.line[j]; } } changed = next.some((row, r) => row.some((v, c) => v !== board[r][c])); if (!changed) { setHint('这里不能移动，试试另一个方向'); return false; } history.push(before); board = next; score += gained; if (score > best) { best = score; localStorage.setItem('2048-best', String(best)); } addTile(); render(); if (!won && board.some(row => row.includes(2048))) { won = true; setHint('2048 已达成！可以继续挑战'); showOverlay('win'); } else if (!canMove()) { setHint('没有可移动的方块了'); showOverlay('over'); } else if (gained) setHint(`合并成功，获得 ${gained} 分`); else setHint('继续寻找下一次合并'); return true; }
+      function canMove() { if (emptyCells().length) return true; for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) if ((r < SIZE - 1 && board[r][c] === board[r + 1][c]) || (c < SIZE - 1 && board[r][c] === board[r][c + 1])) return true; return false; }
+      function undo() { if (!history.length) { setHint('还没有可以撤销的步骤'); return; } restore(history.pop()); setHint('已撤销上一步'); }
+      function directionFromKey(key) { return ({ ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down', a: 'left', d: 'right', w: 'up', s: 'down' })[key]; }
+      document.addEventListener('keydown', (event) => { const direction = directionFromKey(event.key); if (!direction) return; event.preventDefault(); if (!overlay.hidden && !continueBtn.hidden) return; move(direction); });
+      boardEl.addEventListener('touchstart', (event) => { const touch = event.changedTouches[0]; startPoint = { x: touch.clientX, y: touch.clientY }; }, { passive: true });
+      boardEl.addEventListener('touchend', (event) => { if (!startPoint) return; const touch = event.changedTouches[0]; const dx = touch.clientX - startPoint.x; const dy = touch.clientY - startPoint.y; startPoint = null; if (Math.max(Math.abs(dx), Math.abs(dy)) < 26) return; move(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up')); }, { passive: true });
+      document.getElementById('undoTop').addEventListener('click', undo); document.getElementById('undoSide').addEventListener('click', undo); [document.getElementById('newTop'), document.getElementById('newSide'), document.getElementById('restartBtn')].forEach(button => button.addEventListener('click', newGame)); continueBtn.addEventListener('click', () => { keepPlaying = true; hideOverlay(); setHint('继续挑战更高分'); });
+      newGame();
+    })();
+  </script>
+</body>
+</html>
